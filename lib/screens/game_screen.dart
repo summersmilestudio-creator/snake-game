@@ -33,6 +33,8 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     _resetState();
     _load();
+    // Auto-start when entering from home screen
+    WidgetsBinding.instance.addPostFrameCallback((_) => _start());
   }
 
   Future<void> _load() async {
