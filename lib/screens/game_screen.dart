@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../widgets/banner_ad_widget.dart';
+import '../services/ads_service.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -112,6 +114,7 @@ class _GameScreenState extends State<GameScreen> {
     _saveHigh();
     setState(() => _gameOver = true);
     HapticFeedback.heavyImpact();
+    AdsService.instance.maybeShowInterstitial();
   }
 
   void _changeDir(Dir d) {
@@ -132,6 +135,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: const BannerAdWidget(),
       body: SafeArea(
         child: Column(
           children: [
