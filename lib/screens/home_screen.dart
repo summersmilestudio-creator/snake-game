@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import '../widgets/banner_ad_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../game/skins.dart';
 import '../services/rewards_service.dart';
+import '../widgets/banner_ad_widget.dart';
+import '../widgets/game_juice.dart';
 import 'daily_reward_screen.dart';
 import 'game_screen.dart';
 import 'settings_screen.dart';
+import 'shop_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +18,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final _rewards = RewardsService();
-  int _coins = 0;
   int _highScore = 0;
 
   @override
@@ -30,32 +32,25 @@ class _HomeScreenState extends State<HomeScreen> {
       await Navigator.push(context, MaterialPageRoute(
           builder: (_) => DailyRewardScreen(day: r.day, reward: r.reward)));
     }
+    SkinStore.instance.reload();
     _load();
   }
 
   Future<void> _load() async {
-    final c = await _rewards.getCoins();
     final p = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() {
-        _coins = c;
-        _highScore = p.getInt('snakeHigh') ?? 0;
-      });
+      setState(() => _highScore = p.getInt('snakeHigh') ?? 0);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final skin = activeSkinSnake();
     return Scaffold(
       bottomNavigationBar: const BannerAdWidget(),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF0A1628), Color(0xFF1B2C40)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      body: PremiumBackground(
+        colors: skin.bg,
+        bokeh: skin.bokeh,
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -65,41 +60,72 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.settings, color: Color(0xFF4CAF50)),
+                      icon: Icon(Icons.settings, color: skin.accent),
                       onPressed: () async {
                         await Navigator.push(context,
                             MaterialPageRoute(builder: (_) => const SettingsScreen()));
                       },
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFFFD740)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.monetization_on, color: Color(0xFFFFD740), size: 20),
-                          const SizedBox(width: 6),
-                          Text('$_coins',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900)),
-                        ],
-                      ),
+                    Row(
+                      children: [
+                        PressableScale(
+                          onTap: () async {
+                            await Navigator.push(context,
+                                MaterialPageRoute(builder: (_) => const ShopScreen()));
+                            setState(() {});
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: skin.accent),
+                            ),
+                            child: Icon(Icons.palette_rounded,
+                                color: skin.accent, size: 22),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        ListenableBuilder(
+                          listenable: SkinStore.instance,
+                          builder: (context, _) => Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: const Color(0xFFFFD740)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.monetization_on,
+                                    color: Color(0xFFFFD740), size: 20),
+                                const SizedBox(width: 6),
+                                Text('${SkinStore.instance.coins}',
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
                 const Spacer(),
-                const Text('SNAKE',
-                    style: TextStyle(
-                        color: Color(0xFF4CAF50),
-                        fontSize: 64,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 8)),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('WORM RUN',
+                      style: TextStyle(
+                          color: skin.accent,
+                          fontSize: 52,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 5,
+                          shadows: [Shadow(color: skin.accent.withValues(alpha: 0.6), blurRadius: 22)])),
+                ),
                 const Text('CLASSIC',
                     style: TextStyle(
                         color: Colors.white60,
@@ -107,7 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         letterSpacing: 8,
                         fontWeight: FontWeight.w300)),
                 const SizedBox(height: 32),
-                // Snake preview
                 SizedBox(
                   height: 60,
                   child: Center(
@@ -120,19 +145,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             height: 30,
                             margin: const EdgeInsets.symmetric(horizontal: 2),
                             decoration: BoxDecoration(
-                              color: i == 5 ? const Color(0xFF66BB6A) : const Color(0xFF4CAF50),
+                              color: i == 5 ? skin.head : skin.body,
                               borderRadius: BorderRadius.circular(8),
-                              boxShadow: const [BoxShadow(color: Color(0x444CAF50), blurRadius: 6)],
+                              boxShadow: [BoxShadow(color: skin.body.withValues(alpha: 0.4), blurRadius: 6)],
                             ),
                           ),
                         const SizedBox(width: 16),
                         Container(
                           width: 30,
                           height: 30,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFF5252),
+                          decoration: BoxDecoration(
+                            color: skin.food,
                             shape: BoxShape.circle,
-                            boxShadow: [BoxShadow(color: Color(0x66FF5252), blurRadius: 8)],
+                            boxShadow: [BoxShadow(color: skin.food.withValues(alpha: 0.5), blurRadius: 8)],
                           ),
                         ),
                       ],
@@ -145,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFF4CAF50).withValues(alpha: 0.5)),
+                    border: Border.all(color: skin.accent.withValues(alpha: 0.5)),
                   ),
                   child: Column(
                     children: [
@@ -153,8 +178,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(color: Colors.white60, fontSize: 12, letterSpacing: 2)),
                       const SizedBox(height: 6),
                       Text('$_highScore',
-                          style: const TextStyle(
-                              color: Color(0xFF4CAF50),
+                          style: TextStyle(
+                              color: skin.accent,
                               fontSize: 40,
                               fontWeight: FontWeight.w900)),
                     ],
@@ -165,17 +190,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4CAF50),
+                      backgroundColor: skin.accent,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       textStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       elevation: 12,
-                      shadowColor: const Color(0xFF4CAF50),
+                      shadowColor: skin.accent,
                     ),
                     onPressed: () async {
                       await Navigator.push(context,
                           MaterialPageRoute(builder: (_) => const GameScreen()));
+                      SkinStore.instance.reload();
                       _load();
                     },
                     child: const Text('JOC NOU'),
