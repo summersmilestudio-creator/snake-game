@@ -192,7 +192,7 @@ class _GameScreenState extends State<GameScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('SNAKE', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: skin.accent, letterSpacing: 4)),
+                        Text('WORM RUN', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: skin.accent, letterSpacing: 3)),
                         Text('Top: $_high', style: const TextStyle(color: Colors.white54)),
                       ],
                     ),
@@ -331,7 +331,7 @@ class _GameScreenState extends State<GameScreen> {
               Padding(
                 padding: const EdgeInsets.all(8),
                 child: Text(
-                  'Glisează ↑ ↓ ← → pentru a mișca șarpele',
+                  'Glisează ↑ ↓ ← → pentru a mișca viermele',
                   style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
                 ),
               ),
