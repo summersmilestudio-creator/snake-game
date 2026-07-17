@@ -1,7 +1,7 @@
 name: snake_game
 description: "Joc clasic Snake — controlat prin swipe"
 publish_to: 'none'
-version: 1.2.0+13
+version: 1.2.1+14
 environment:
   sdk: ^3.11.1
 
